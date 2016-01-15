@@ -145,8 +145,8 @@ Syntax:
     $dashless add <repository-url> <path> [<branch>]	
     $dashless list
     $dashless rm <path>
-    $dashless init [<path>...]
-    $dashless update [<path>...]
+    $dashless init
+    $dashless update
     $dashless cmd '<command>'		
 
 Description:
