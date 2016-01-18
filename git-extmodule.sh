@@ -74,6 +74,7 @@ init_module() {
 	local url=$2
 	local path=$3
 	local branch=${4:-'master'}
+	local revision=$5
 
 	echo "init module $name with $url, $path, $branch" >&2
 
@@ -194,7 +195,6 @@ command_rm() {
 command_init() {
 	for module in $(get_modules); do		
 		get_module_config $module
-
 		$(init_module $module $url $path $branch $revision)
 	done
 }
@@ -202,7 +202,6 @@ command_init() {
 command_update() {
 	for module in $(get_modules); do		
 		get_module_config $module
-
 		$(update_module $module $url $path $branch $revision)
 	done
 }
@@ -216,7 +215,7 @@ command_list() {
 		echo "    path:     $path"
 		echo "    branch:   $branch"
 		
-		if [[ -e $revision ]]; then
+		if [[ -n $revision ]]; then
 			echo "    revision: $revision"
 		fi
 	done
