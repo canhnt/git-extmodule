@@ -38,9 +38,15 @@ if [[ ! -e $config_file ]]; then
 	touch $config_file
 fi
 
-# return array of external modules in config file
-get_modules() {	
-	echo $(git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq)			
+modules=
+# return a list of external modules from config file to the global variable $modules
+get_modules() {			
+	local result=`git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq`
+	if [[ -n $result ]]; then
+		modules=($result)
+		return 0;
+	fi
+	return 1;
 }
 
 # read a configuration setting from config file
@@ -56,7 +62,6 @@ get_module_config() {
 	url=$(get_config $module "url")
 	path=$(get_config $module "path")
 	branch=$(get_config $module "branch")		
-	revision=$(get_config $module "revision")
 }
 
 module_exists() {
@@ -74,7 +79,6 @@ init_module() {
 	local url=$2
 	local path=$3
 	local branch=${4:-'master'}
-	local revision=$5
 
 	echo "init module $name with $url, $path, $branch" >&2
 
@@ -84,17 +88,6 @@ init_module() {
 	fi
 
 	$(git clone $url -b $branch --single-branch $path)
-
-	# change to module path	
-	cd $path	
-
-	if [[ $revision ]]; then
-	 	echo "Dealing with a tag/sha1: $branch" >&2
-	 	$(update_module $url $path $branch $revision)
-	fi	
-	
-	# return to parent path
-	cd ..	
 }
 
 # Check for uncommitted changes in the given path
@@ -114,25 +107,18 @@ update_module() {
 	local url=$2
 	local path=$3
 	local branch=$4	
-	local revision=$5
 	
 	if [ -e $path/.git ]; then
 		cd $path
 		if [[ $(has_uncommitted $path) ]]; then
-			echo "$path - uncommitted changes detected, can not update repository" >&2
-		elif [[ $revision ]]; then			
-			echo "$path - updating to revision: $revision" >&2
-
-			values=(${branch//\/// })
-			remoteName=${values[1]}
-		 	
-		 	git fetch $remoteName > /dev/null
-		 	git checkout $revision > /dev/null
+			echo "$path - uncommitted changes detected, can not update repository" >&2		
 		else
 			echo "$path - updating branch '$branch'" >&2
 			git pull origin "$branch" > /dev/null
 		fi
 		cd ..
+	else
+		echo "Error- Module '$path' is not initialized" >&2
 	fi
 }
 
@@ -176,6 +162,9 @@ command_rm() {
 	local path=$1
 	if module_exists "$path"; then
 		$(git config --file $config_file --remove-section "$MODULE_PREFIX.$path")
+	else
+		echo "Path not found: '$path'" >&2
+		return 1;
 	fi
 
 	if [[ -e $ignore_file ]]; then		
@@ -188,42 +177,56 @@ command_rm() {
 		ignores=(${ignores[@]/$path})
 
 		# write update
-		printf '%s\n' "${ignores[@]}" > "$ignore_file"
+		printf '%s\n' "${ignores[@]}" > "$ignore_file"	
 	fi
 }
 
 command_init() {
-	for module in $(get_modules); do		
-		get_module_config $module
-		$(init_module $module $url $path $branch $revision)
-	done
+	
+	if get_modules; then
+		
+		for module in $modules; do		
+			get_module_config $module
+			$(init_module $module $url $path $branch)
+		done
+	else
+		echo "No external module found. Use command 'add' first" >&2
+		return 1;
+	fi
 }
 
 command_update() {
-	for module in $(get_modules); do		
-		get_module_config $module
-		$(update_module $module $url $path $branch $revision)
-	done
+	if get_modules; then 
+		for module in $modules; do		
+			get_module_config $module
+			$(update_module $module $url $path $branch)
+		done
+	else
+		echo "No external module found. Use command 'init' first" >&2
+		return 1;
+	fi
 }
 
 command_list() {
-	for module in $(get_modules); do		
-		get_module_config $module
+	if get_modules; then	
+		for module in $modules; do		
+			get_module_config $module
 
-		echo "[$module]"
-		echo "    url:      $url"
-		echo "    path:     $path"
-		echo "    branch:   $branch"
-		
-		if [[ -n $revision ]]; then
-			echo "    revision: $revision"
-		fi
-	done
+			echo "[$module]"
+			echo "    url:      $url"
+			echo "    path:     $path"
+			echo "    branch:   $branch"		
+		done
+	else
+		echo "No external module found Use command 'add' first" >&2
+		return 1;
+	fi
 }
 
 command_cmd() {
+	get_modules
 	local cmd=$1
-	for module in $(get_modules); do		
+	for module in $modules; do		
 		path=$(get_config $module "path")
 		echo "$path - Executing '$cmd'" >&2
 		cd $path
