@@ -162,9 +162,6 @@ command_rm() {
 	local path=$1
 	if module_exists "$path"; then
 		$(git config --file $config_file --remove-section "$MODULE_PREFIX.$path")
-	else
-		echo "Path not found: '$path'" >&2
-		return 1;
 	fi
 
 	if [[ -e $ignore_file ]]; then		
@@ -183,8 +180,7 @@ command_rm() {
 
 command_init() {
 	
-	if get_modules; then
-		
+	if get_modules; then		
 		for module in $modules; do		
 			get_module_config $module
 			$(init_module $module $url $path $branch)
