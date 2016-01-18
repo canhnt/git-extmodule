@@ -68,11 +68,12 @@ module_exists() {
 	fi
 }
 
+# Clone a single branch of the external module to the given path
 init_module() {
 	local name=$1
 	local url=$2
 	local path=$3
-	local branch=${4:-'origin/master'}
+	local branch=${4:-'master'}
 
 	echo "init module $name with $url, $path, $branch" >&2
 
@@ -81,7 +82,7 @@ init_module() {
 		return 1
 	fi
 
-	$(git clone $url $path)
+	$(git clone $url -b $branch --single-branch $path)
 
 	# change to module path	
 	cd $path	
@@ -89,17 +90,8 @@ init_module() {
 	if [[ $revision ]]; then
 	 	echo "Dealing with a tag/sha1: $branch" >&2
 	 	$(update_module $url $path $branch $revision)
-	else		 
-		# create new branch if it does not exist
-		echo "Creating local tracking branch: $branch" >&2
-		if [[ ! $(git branch --list $branch) ]]; then		
-			git checkout -b $branch > /dev/null
-		else
-			git checkout $branch > /dev/null
-		fi
 	fi	
 	
-
 	# return to parent path
 	cd ..	
 }
