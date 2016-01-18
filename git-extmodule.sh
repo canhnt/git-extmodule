@@ -34,9 +34,13 @@ root_dir="`git rev-parse --show-toplevel`/"
 config_file="$root_dir".gitexternals
 ignore_file="$root_dir".gitignore
 
+if [[ ! -e $config_file ]]; then
+	touch $config_file
+fi
+
 # return array of external modules in config file
-get_modules() {
-	echo $(git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq)
+get_modules() {	
+	echo $(git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq)			
 }
 
 # read a configuration setting from config file
