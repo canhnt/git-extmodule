@@ -167,7 +167,7 @@ EOF
 command_add() {
 	local url=$1;
 	local path=$2;
-	local branch=${3:-'origin/master'};
+	local branch=${3:-'master'};
 	# echo "Adding module '$path' from branch '$branch' of the repository '$url'" >&2
 
 	$(command_rm $path)
