@@ -32,7 +32,7 @@ git extmodule init
 git extmodule update
 ```
 
-#### List external repositories 
+#### List external repositories
 
 ```
 git extmodule list

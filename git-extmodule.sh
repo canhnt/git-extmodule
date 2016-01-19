@@ -61,20 +61,20 @@ fi
 
 modules=
 # return a list of external modules from config file to the global variable $modules
-get_modules() {			
+get_modules() {
 	local result=`git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq`
-	if [[ -n $result ]]; then		
-		modules=($result)		
+	if [[ -n $result ]]; then
+		modules=($result)
 		return 0;
 	fi
 	return 1;
 }
 
 # read a configuration setting from config file
-get_config() {	
-	name=$1	
+get_config() {
+	name=$1
 	option=$2
-	
+
 	value=$(git config --file $config_file $MODULE_PREFIX.$name.$option)
 	echo $value
 }
@@ -82,12 +82,12 @@ get_config() {
 get_module_config() {
 	url=$(get_config $module "url")
 	path=$(get_config $module "path")
-	branch=$(get_config $module "branch")		
+	branch=$(get_config $module "branch")
 }
 
 module_exists() {
 	local name=$1
-	if [[ $(git config --file $config_file -l | grep "$MODULE_PREFIX.$name") ]]; then 
+	if [[ $(git config --file $config_file -l | grep "$MODULE_PREFIX.$name") ]]; then
 		return 0;
 	else
 		return 1;
@@ -118,21 +118,21 @@ has_uncommitted() {
 		cd $name
 		git diff-index --quiet 'HEAD'
 		cd ..
-		return $?	
-	fi	
-	return 1	
+		return $?
+	fi
+	return 1
 }
 
 update_module() {
 	local name=$1
 	local url=$2
 	local path=$3
-	local branch=$4	
-	
+	local branch=$4
+
 	if [ -e $path/.git ]; then
 		cd $path
 		if [[ $(has_uncommitted $path) ]]; then
-			echo "$path - uncommitted changes detected, can not update repository" >&2		
+			echo "$path - uncommitted changes detected, can not update repository" >&2
 		else
 			echo "$path - updating branch '$branch'" >&2
 			git pull origin "$branch" > /dev/null
@@ -143,18 +143,18 @@ update_module() {
 	fi
 }
 
-command_help() {	
+command_help() {
  cat <<EOF
-Syntax: 
-    $dashless add <repository-url> <path> [<branch>]	
+Syntax:
+    $dashless add <repository-url> <path> [<branch>]
     $dashless list
     $dashless rm <path>
     $dashless init
     $dashless update
-    $dashless cmd '<command>'		
+    $dashless cmd '<command>'
 
 Description:
-    add     :  create configuration for a new external repository module    
+    add     :  create configuration for a new external repository module
     list    :  list configuration of your repository
     rm      :  remove an external repository module
     init    :  initialize (git clone) external repositories
@@ -179,29 +179,29 @@ command_add() {
 	echo $path >> $ignore_file
 }
 
-command_rm() {	
+command_rm() {
 	local path=$1
 	if module_exists "$path"; then
 		$(git config --file $config_file --remove-section "$MODULE_PREFIX.$path")
 	fi
 
-	if [[ -e $ignore_file ]]; then		
+	if [[ -e $ignore_file ]]; then
 		# remove path from ignore file
-		ignores=() 
+		ignores=()
 		while read -r line; do
-			ignores+=($line); 
+			ignores+=($line);
 		done < "$ignore_file"
 		# remove item
 		ignores=(${ignores[@]/$path})
 
 		# write update
-		printf '%s\n' "${ignores[@]}" > "$ignore_file"	
+		printf '%s\n' "${ignores[@]}" > "$ignore_file"
 	fi
 }
 
 command_init() {
-	
-	if get_modules; then		
+
+	if get_modules; then
 		for module in ${modules[@]}; do
 			get_module_config $module
 			$(init_module $module $url $path $branch)
@@ -213,7 +213,7 @@ command_init() {
 }
 
 command_update() {
-	if get_modules; then 
+	if get_modules; then
 		for module in ${modules[@]}; do
 			get_module_config $module
 			$(update_module $module $url $path $branch)
@@ -225,14 +225,14 @@ command_update() {
 }
 
 command_list() {
-	if get_modules; then	
+	if get_modules; then
 		for module in ${modules[@]}; do
 			get_module_config $module
 
 			echo "[$module]"
 			echo "    url:      $url"
 			echo "    path:     $path"
-			echo "    branch:   $branch"		
+			echo "    branch:   $branch"
 		done
 	else
 		echo "No external module found Use command 'add' first" >&2
