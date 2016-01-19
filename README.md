@@ -48,3 +48,6 @@ git extmodule rm <path>
 git extmodule cmd '<command>'
 ```
 
+## License
+
+See the [LICENSE](LICENSE) file for license rights and limitations (Apache 2.0).
