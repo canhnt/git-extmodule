@@ -42,8 +42,8 @@ modules=
 # return a list of external modules from config file to the global variable $modules
 get_modules() {			
 	local result=`git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq`
-	if [[ -n $result ]]; then
-		modules=($result)
+	if [[ -n $result ]]; then		
+		modules=($result)		
 		return 0;
 	fi
 	return 1;
@@ -181,7 +181,7 @@ command_rm() {
 command_init() {
 	
 	if get_modules; then		
-		for module in $modules; do		
+		for module in ${modules[@]}; do
 			get_module_config $module
 			$(init_module $module $url $path $branch)
 		done
@@ -193,7 +193,7 @@ command_init() {
 
 command_update() {
 	if get_modules; then 
-		for module in $modules; do		
+		for module in ${modules[@]}; do
 			get_module_config $module
 			$(update_module $module $url $path $branch)
 		done
@@ -205,7 +205,7 @@ command_update() {
 
 command_list() {
 	if get_modules; then	
-		for module in $modules; do		
+		for module in ${modules[@]}; do
 			get_module_config $module
 
 			echo "[$module]"
@@ -222,7 +222,7 @@ command_list() {
 command_cmd() {
 	get_modules
 	local cmd=$1
-	for module in $modules; do		
+	for module in ${modules[@]}; do
 		path=$(get_config $module "path")
 		echo "$path - Executing '$cmd'" >&2
 		cd $path
