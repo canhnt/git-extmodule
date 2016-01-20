@@ -43,7 +43,7 @@
 
 MODULE_PREFIX='external'
 
-dashless=$(basename "$0" | sed -e 's/-/ /')
+dashless="$(basename "$0" | sed -e 's/-/ /')"
 
 set -e
 
@@ -51,93 +51,84 @@ if [ $# -eq 0 ]; then
 	set -- help
 fi
 
-root_dir="`git rev-parse --show-toplevel`/"
-config_file="$root_dir".gitexternals
-ignore_file="$root_dir".gitignore
+root_dir="$(git rev-parse --show-toplevel)"
+config_file="$root_dir"/.gitexternals
+ignore_file="$root_dir"/.gitignore
 
-if [[ ! -e $config_file ]]; then
-	touch $config_file
+if [[ ! -e "$config_file" ]]; then
+	touch "$config_file"
 fi
 
 modules=
 # return a list of external modules from config file to the global variable $modules
 get_modules() {
-	local result=`git config --file $config_file --list | grep ^$MODULE_PREFIX | cut -d. -f2 | sort | uniq`
-	if [[ -n $result ]]; then
-		modules=($result)
-		return 0;
-	fi
-	return 1;
+	IFS=$'\n\r' modules=$(git config --file "$config_file" --list | grep "^$MODULE_PREFIX" | cut -d. -f2 | sort | uniq)
+	test -n "$modules"
 }
 
 # read a configuration setting from config file
 get_config() {
-	name=$1
-	option=$2
-
-	value=$(git config --file $config_file $MODULE_PREFIX.$name.$option)
-	echo $value
+	name="$1"
+	option="$2"
+	git config --file "$config_file" "$MODULE_PREFIX.$name.$option"
 }
 
 get_module_config() {
-	url=$(get_config $module "url")
-	path=$(get_config $module "path")
-	branch=$(get_config $module "branch")
+	url="$(get_config "$module" "url")"
+	path="$(get_config "$module" "path")"
+	branch="$(get_config "$module" "branch")"
 }
 
 module_exists() {
-	local name=$1
-	if [[ $(git config --file $config_file -l | grep "$MODULE_PREFIX.$name") ]]; then
-		return 0;
-	else
-		return 1;
-	fi
+	local name="$1"
+	git config --file "$config_file" -l | grep -q "^$MODULE_PREFIX.$name"
 }
 
 # Clone a single branch of the external module to the given path
 init_module() {
-	local name=$1
-	local url=$2
-	local path=$3
-	local branch=${4:-'master'}
+	local name="$1"
+	local url="$2"
+	local path="$3"
+	local branch="${4:-master}"
 
 	echo "init module $name with $url, $path, $branch" >&2
 
-	if [ -e $path/.git ]; then
+	if [ -e "$path/.git" ]; then
 		echo "Repository already exists" >&2
 		return 1
 	fi
 
-	$(git clone $url -b $branch --single-branch $path)
+	git clone "$url" -b "$branch" --single-branch "$path"
 }
 
 # Check for uncommitted changes in the given path
 has_uncommitted() {
-	local name=$1
-	if [[ -e $name ]]; then
-		cd $name
-		git diff-index --quiet 'HEAD'
-		cd ..
-		return $?
+	local name="$1"
+	if [[ -e "$name" ]]; then
+		(
+			cd "$name" && git diff-index --quiet 'HEAD'
+		)
+	else
+		false
 	fi
-	return 1
 }
 
 update_module() {
-	local name=$1
-	local url=$2
-	local path=$3
-	local branch=$4
+	local name="$1"
+	local url="$2"
+	local path="$3"
+	local branch="$4"
 
-	if [ -e $path/.git ]; then
-		cd $path
-		if [[ $(has_uncommitted $path) ]]; then
-			echo "$path - uncommitted changes detected, can not update repository" >&2
-		else
-			echo "$path - updating branch '$branch'" >&2
-			git pull origin "$branch" > /dev/null
-		fi
-		cd ..
+	if [ -e "$path/.git" ]; then
+		(
+			cd "$path"
+			if has_uncommitted "$path"; then
+				echo "$path - uncommitted changes detected, can not update repository" >&2
+			else
+				echo "$path - updating branch '$branch'" >&2
+				git pull origin "$branch" > /dev/null
+			fi
+		)
 	else
 		echo "Error- Module '$path' is not initialized" >&2
 	fi
@@ -165,27 +156,27 @@ EOF
 }
 
 command_add() {
-	local url=$1;
-	local path=$2;
-	local branch=${3:-'master'};
+	local url="$1"
+	local path="$2"
+	local branch="${3:-master}"
 	# echo "Adding module '$path' from branch '$branch' of the repository '$url'" >&2
 
-	$(command_rm $path)
+	command_rm "$path"
 
-	$(git config --file $config_file --add "$MODULE_PREFIX.$path.path" $path)
-	$(git config --file $config_file --add "$MODULE_PREFIX.$path.url" $url)
-	$(git config --file $config_file --add "$MODULE_PREFIX.$path.branch" $branch)
+	git config --file "$config_file" --add "$MODULE_PREFIX.$path.path" "$path"
+	git config --file "$config_file" --add "$MODULE_PREFIX.$path.url" "$url"
+	git config --file "$config_file" --add "$MODULE_PREFIX.$path.branch" "$branch"
 
-	echo $path >> $ignore_file
+	echo "$path" >> "$ignore_file"
 }
 
 command_rm() {
-	local path=$1
+	local path="$1"
 	if module_exists "$path"; then
-		$(git config --file $config_file --remove-section "$MODULE_PREFIX.$path")
+		git config --file "$config_file" --remove-section "$MODULE_PREFIX.$path"
 	fi
 
-	if [[ -e $ignore_file ]]; then
+	if [[ -e "$ignore_file" ]]; then
 		# remove path from ignore file
 		ignores=()
 		while read -r line; do
@@ -203,8 +194,8 @@ command_init() {
 
 	if get_modules; then
 		for module in ${modules[@]}; do
-			get_module_config $module
-			$(init_module $module $url $path $branch)
+			get_module_config "$module"
+			init_module "$module" "$url" "$path" "$branch"
 		done
 	else
 		echo "No external module found. Use command 'add' first" >&2
@@ -215,8 +206,8 @@ command_init() {
 command_update() {
 	if get_modules; then
 		for module in ${modules[@]}; do
-			get_module_config $module
-			$(update_module $module $url $path $branch)
+			get_module_config "$module"
+			update_module "$module" "$url" "$path" "$branch"
 		done
 	else
 		echo "No external module found. Use command 'init' first" >&2
@@ -227,7 +218,7 @@ command_update() {
 command_list() {
 	if get_modules; then
 		for module in ${modules[@]}; do
-			get_module_config $module
+			get_module_config "$module"
 
 			echo "[$module]"
 			echo "    url:      $url"
@@ -242,13 +233,13 @@ command_list() {
 
 command_cmd() {
 	get_modules
-	local cmd=$1
+	local cmd="$1"
 	for module in ${modules[@]}; do
-		path=$(get_config $module "path")
+		path="$(get_config "$module" "path")"
 		echo "$path - Executing '$cmd'" >&2
-		cd $path
-		$($cmd)
-		cd ..
+		(
+			cd "$path" && $cmd
+		)
 	done
 }
 
