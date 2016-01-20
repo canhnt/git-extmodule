@@ -7,9 +7,13 @@ This script is based on the git-external in ruby version by Daniel Cestari 2010
 ### Installation
 #### Linux
 - Add the `git-extmodule` to the $PATH
+- Alternatively, run `git config --global alias.extmodule !/path/to/git-extmodule`.
+Note the exclamation mark.  This has the advantage that you
+get some tab completion on the command line.
 
 #### Windows
 - Copy the `git-extmodule` to `%PROGRAMFILES%\Git\mingw64\libexec\git-core`
+
 
 ### Usages
 
