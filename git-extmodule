@@ -103,13 +103,10 @@ init_module() {
 
 # Check for uncommitted changes in the given path
 has_uncommitted() {
-	local name="$1"
-	if [[ -e "$name" ]]; then
-		(
-			cd "$name" && git diff-index --quiet 'HEAD'
-		)
+	if ( cd "$name" && git diff-index --quiet HEAD ); then
+		return 1
 	else
-		false
+		return 0
 	fi
 }
 
@@ -121,12 +118,14 @@ update_module() {
 
 	if [ -e "$path/.git" ]; then
 		(
-			cd "$path"
 			if has_uncommitted "$path"; then
 				echo "$path - uncommitted changes detected, can not update repository" >&2
+				exit 1
 			else
 				echo "$path - updating branch '$branch'" >&2
-				git pull origin "$branch" > /dev/null
+				(
+					cd "$path" && git pull origin "$branch" > /dev/null
+				)
 			fi
 		)
 	else
