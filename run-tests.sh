@@ -3,26 +3,31 @@
 # change dir to where run.sh is
 cd "$(dirname "$0")"
 
-export IT="$PWD/../git-extmodule"
+export IT="git extmodule"
+
+export TESTSROOT="$PWD"
+export TMPROOT="$PWD/TMP"
+export REPOS="$TMPROOT"
+export WORK="$TMPROOT/work"
 
 if [ -n "$*" ]
 then
 	tests=("$@")
 else
-	tests=$(ls test*.sh | sort)
+	tests=$(ls tests/test*.sh | sort)
 fi
 
 set -e
 
 setup() (
-	rm -rf TESTDIR TESTREPODIR
-	repos='main sub1 sub2'
-	mkdir TESTDIR 
-	for r in main sub1 sub2; do
+	rm -rf "$TMPROOT"
+	mkdir -p "$WORK"
+	for r in sub1 sub2; do
 		(
+			REPO="$TMPROOT/$r"
 			set -e
-			mkdir -p TESTREPODIR/$r
-			cd TESTREPODIR/$r
+			mkdir -p "$REPO"
+			cd "$REPO"
 			git init
 			for n in 1 2 3; do
 				f="$r-$n"
@@ -36,21 +41,21 @@ setup() (
 			git commit -m "added alternate-$r"
 			git checkout master
 		)
-	done
+	done >"$WORK"/SETUP.OUT 2>&1
 )
 
 runtest() (
 	set -e
-	PATH="$PWD:$PWD/..:$PATH" 
-	export REPOS="$PWD/TESTREPODIR"
-	setup >SETUP.OUT 2>&1
-	cd TESTDIR
-	echo "* Running test '$1'"
-	if bash "$1" >RUN.OUT 2>&1 
+	TEST="$TESTSROOT/$1"
+	PATH="$PWD:$PATH"
+	setup
+	cd "$WORK"
+	echo "* Running test '$TEST'"
+	if "$TEST" >RUN.OUT 2>&1
 	then
 		exit 0
 	else
-		echo "* TEST '$1' FAILED.  OUTPUT:"
+		echo "* TEST '$TEST' FAILED.  OUTPUT:"
 		echo
 		cat RUN.OUT
 		echo
