@@ -177,16 +177,9 @@ command_rm() {
 	fi
 
 	if [[ -e "$ignore_file" ]]; then
-		# remove path from ignore file
-		ignores=()
-		while read -r line; do
-			ignores+=($line);
-		done < "$ignore_file"
-		# remove item
-		ignores=(${ignores[@]/$path})
-
-		# write update
-		printf '%s\n' "${ignores[@]}" > "$ignore_file"
+		tmpfile="$(mktemp)"
+		cat "$ignore_file" >"$tmpfile"
+		fgrep -v "$path" <"$tmpfile" >"$ignore_file" || true
 	fi
 }
 
