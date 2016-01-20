@@ -6,13 +6,10 @@ This script is based on the git-external in ruby version by Daniel Cestari 2010
 
 ### Installation
 #### Linux
-- Add the `git-extmodule.sh` to the $PATH
-- Rename it to `git-extmodule`
-- Add execute permission '+x'
+- Add the `git-extmodule` to the $PATH
 
 #### Windows
-- Copy the `git-extmodule.sh` to `%PROGRAMFILES%\Git\mingw64\libexec\git-core`
-- Rename it to `git-extmodule`
+- Copy the `git-extmodule` to `%PROGRAMFILES%\Git\mingw64\libexec\git-core`
 
 ### Usages
 

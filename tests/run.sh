@@ -3,7 +3,7 @@
 # change dir to where run.sh is
 cd "$(dirname "$0")"
 
-export IT="$PWD/../git-extmodule.sh"
+export IT="$PWD/../git-extmodule"
 
 if [ -n "$*" ]
 then
