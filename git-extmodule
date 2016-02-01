@@ -85,21 +85,23 @@ module_exists() {
 }
 
 # Clone a single branch of the external module to the given path
-init_module() {
+init_module() (
 	local name="$1"
 	local url="$2"
 	local path="$3"
 	local branch="${4:-master}"
 
-	echo "init module $name with $url, $path, $branch" >&2
+	echo "init module '$name' at '$url', '$path', '$branch'" >&2
 
 	if [ -e "$path/.git" ]; then
 		echo "Repository already exists" >&2
 		return 1
 	fi
 
+	unset GIT_DIR
+	unset GIT_WORK_TREE
 	git clone "$url" -b "$branch" --single-branch "$path"
-}
+)
 
 # Check for uncommitted changes in the given path
 has_uncommitted() {
