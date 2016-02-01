@@ -40,6 +40,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+unset GIT_WORK_TREE
 
 MODULE_PREFIX='external'
 
@@ -98,19 +99,18 @@ init_module() (
 		return 1
 	fi
 
-	unset GIT_DIR
-	unset GIT_WORK_TREE
 	git clone "$url" -b "$branch" --single-branch "$path"
 )
 
 # Check for uncommitted changes in the given path
-has_uncommitted() {
-	if ( cd "$name" && git diff-index --quiet HEAD ); then
-		return 1
+has_uncommitted() (
+	if cd "$name" && pwd && git diff-index --quiet HEAD
+	then
+		exit 1	# no local changes -> diff-index succeeded -> has_uncommitted=false
 	else
-		return 0
+		exit 0	# local changes -> diff-index failed -> has_uncommitted=true
 	fi
-}
+)
 
 update_module() {
 	local name="$1"
