@@ -5,8 +5,8 @@ This script is based on the git-external in ruby version by Daniel Cestari 2010
 (https://github.com/dcestari/git-external)
 
 ### Installation
-#### Linux
-- Add the `git-extmodule` to the $PATH
+#### Linux/Mac
+- Add the `git-extmodule` to the $PATH and make it executable
 - Alternatively, run `git config --global alias.extmodule \!/path/to/git-extmodule`.
 Note the exclamation mark.  This has the advantage that you
 get some tab completion on the command line.
