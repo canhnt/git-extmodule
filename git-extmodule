@@ -198,7 +198,11 @@ command_init() {
 	if get_modules; then
 		for module in ${modules[@]}; do
 			get_module_config "$module"
-			init_module "$module" "$url" "$path" "$branch"
+			if [ -d "$path" ]; then
+				true
+			else
+				init_module "$module" "$url" "$path" "$branch"
+			fi
 		done
 	else
 		echo "No external module found. Use command 'add' first" >&2
