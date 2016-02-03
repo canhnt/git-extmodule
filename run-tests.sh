@@ -9,6 +9,7 @@ export TESTSROOT="$PWD"
 export TMPROOT="$PWD/TMP"
 export REPOS="$TMPROOT"
 export WORK="$TMPROOT/work"
+export HOME="$WORK"
 
 if [ -n "$*" ]
 then
@@ -22,6 +23,8 @@ set -e
 setup() (
 	rm -rf "$TMPROOT"
 	mkdir -p "$WORK"
+	git config --global user.email "run-tests.sh@example.com"
+	git config --global user.name "Run Tests Sh"
 	for r in sub1 sub2; do
 		(
 			REPO="$TMPROOT/$r"
