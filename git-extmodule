@@ -99,7 +99,7 @@ init_module() (
 		return 1
 	fi
 
-	git clone "$url" -b "$branch" --single-branch "$path"
+	git clone "$url" -b "$branch" "$path"
 )
 
 # Check for uncommitted changes in the given path
