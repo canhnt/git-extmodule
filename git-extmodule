@@ -168,7 +168,7 @@ command_add() {
 	git config --file "$config_file" --add "$MODULE_PREFIX.$path.url" "$url"
 	git config --file "$config_file" --add "$MODULE_PREFIX.$path.branch" "$branch"
 
-	echo "$path" >> "$ignore_file"
+	echo "/$path" >> "$ignore_file"
 }
 
 command_rm() {
@@ -180,7 +180,7 @@ command_rm() {
 	if [[ -e "$ignore_file" ]]; then
 		tmpfile="$(mktemp /tmp/git-extmodule.XXXXXXX)"
 		cat "$ignore_file" >"$tmpfile"
-		fgrep -v "$path" <"$tmpfile" >"$ignore_file" || true
+		fgrep -v "/$path" <"$tmpfile" >"$ignore_file" || true
 		rm "$tmpfile"
 	fi
 }
