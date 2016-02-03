@@ -160,9 +160,17 @@ command_add() {
 	local url="$1"
 	local path="$2"
 	local branch="${3:-master}"
-	# echo "Adding module '$path' from branch '$branch' of the repository '$url'" >&2
+	echo "Adding module '$path' from branch '$branch' of the repository '$url'" >&2
+	ls -F
 
-	command_rm "$path"
+	if module_exists "$path"; then
+		echo "External '$path' already exists"
+		exit 1
+	fi
+	if [ -d "$path" ]; then
+		echo "Directory '$path' already exists"
+		exit 1
+	fi
 
 	git config --file "$config_file" --add "$MODULE_PREFIX.$path.path" "$path"
 	git config --file "$config_file" --add "$MODULE_PREFIX.$path.url" "$url"
