@@ -126,7 +126,7 @@ update_module() {
 			else
 				echo "$path - updating branch '$branch'" >&2
 				(
-					cd "$path" && git pull origin "$branch" > /dev/null
+					cd "$path" && git pull --ff-only origin "$branch" > /dev/null
 				)
 			fi
 		)
