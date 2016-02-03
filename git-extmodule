@@ -178,7 +178,7 @@ command_rm() {
 	fi
 
 	if [[ -e "$ignore_file" ]]; then
-		tmpfile="$(mktemp)"
+		tmpfile="$(mktemp /tmp/git-extmodule.XXXXXXX)"
 		cat "$ignore_file" >"$tmpfile"
 		fgrep -v "$path" <"$tmpfile" >"$ignore_file" || true
 	fi
